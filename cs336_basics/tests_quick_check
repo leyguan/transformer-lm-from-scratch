@@ -1,0 +1,39 @@
+2.5
+train_bpe ✅ - [adapters.run_train_bpe] uv run pytest tests/test_train_bpe.py
+2.6.2
+tokenizer ✅ - [adapters.get_tokenizer] uv run pytest tests/test_tokenizer.py
+3.3.2 
+linear ✅ - [adapters.run_linear] uv run pytest -k test_linear
+3.3.3
+embedding ✅ - [adapters.run_embedding] uv run pytest -k test_embedding
+3.4.1
+rmsnorm ✅ - [adapters.run_rmsnorm] uv run pytest -k test_rmsnorm
+3.4.2
+swiglu ✅ - [adapters.run_swiglu] uv run pytest -k test_swiglu 
+3.4.3
+rope ✅ - [adapters.run_rope] uv run pytest -k test_rope
+3.4.4
+softmax ✅ - [adapters.run_softmax] uv run pytest -k test_softmax_matches_pytorch
+scaled_dot_product_attention ✅ - [adapters.run_scaled_dot_product_attention] uv run pytest -k test_scaled_dot_product_attention
+3.4.5
+multihead_self_attention ✅ - [adapters.run_multihead_self_attention] [adapters.run_multihead_self_attention_with_rope] uv run pytest -k test_multihead_self_attention
+3.5
+transformer_block ✅ - [adapters.run_transformer_block] uv run pytest -k test_transformer_block
+transformer_lm ✅ - [adapters.run_transformer_lm] uv run pytest -k test_transformer_lm
+4.1
+cross_entropy ✅ - [adapters.run_cross_entropy] uv run pytest -k test_cross_entropy
+4.3
+adamw_cls ✅ - [adapters.get_adamw_cls] uv run pytest -k test_adamw
+4.4
+get_lr_cosine_schedule ✅ - [adapters.get_lr_cosine_schedule] uv run pytest -k test_get_lr_cosine_schedule
+4.5
+gradient_clipping ✅ - [adapters.run_gradient_clipping] uv run pytest -k test_gradient_clipping
+5.1
+get_batch ✅ - [adapters.run_get_batch] uv run pytest -k test_get_batch
+5.2
+save_checkpoint ✅ - [adapters.run_save_checkpoint] 
+load_checkpoint ✅ - [adapters.run_load_checkpoint] 
+uv run pytest -k test_checkpointing
+
+No:
+silu

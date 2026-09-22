@@ -161,3 +161,50 @@ cython_debug/
 
 .ruff_cache/
 *.zip
+
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.Python
+*.egg-info/
+dist/
+build/
+
+# 模型权重（上传到 HuggingFace，不放 GitHub）
+checkpoints/
+*.pt
+*.bin
+*.safetensors
+
+# 数据文件（太大）
+data/*.npy
+data/*.txt
+data/*.bin
+
+# BPE 产物（可选：如果想保留 vocab/merges 就注释掉）
+# bpe/*/bpe_merges.txt
+# bpe/*/bpe_vocab.json
+
+# 日志
+logs/
+*.log
+bpe/*/bpe_train.log
+
+# 环境
+.env
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# 作业 PDF（一般不传）
+*.pdf
+
+# uv
+.uv/
+

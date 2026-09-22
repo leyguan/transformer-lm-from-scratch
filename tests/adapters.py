@@ -8,6 +8,24 @@ import numpy.typing as npt
 import torch
 from jaxtyping import Bool, Float, Int
 from torch import Tensor
+from cs336_basics.train_bpe import train_bpe
+from cs336_basics.linear import Linear
+from cs336_basics.embedding import Embedding
+from cs336_basics.rmsnorm import RMSNorm
+from cs336_basics.swiglu import swiglu
+from cs336_basics.rope import RoPE
+from cs336_basics.softmax import softmax
+from cs336_basics.scaled_dot_product_attention import scaled_dot_product_attention
+from cs336_basics.multihead_self_attention import MultiHeadSelfAttention
+from cs336_basics.transformer_block import transformer_block
+from cs336_basics.transformer_lm import transformer_lm
+from cs336_basics.cross_entropy import cross_entropy
+from cs336_basics.adamw import AdamW
+from cs336_basics.get_lr_cosine_schedule import get_lr_cosine_schedule
+from cs336_basics.gradient_clipping import clip_gradients
+from cs336_basics.tokenizer import Tokenizer
+from cs336_basics.get_batch import get_batch
+from cs336_basics.checkpointing import save_checkpoint, load_checkpoint
 
 
 def run_linear(
@@ -29,7 +47,9 @@ def run_linear(
         Float[Tensor, "... d_out"]: The transformed output of your linear module.
     """
 
-    raise NotImplementedError
+    linear = Linear(d_in, d_out, device=weights.device, dtype=weights.dtype)
+    linear.load_state_dict({"weight": weights})
+    return linear(in_features)
 
 
 def run_embedding(
@@ -51,7 +71,10 @@ def run_embedding(
         Float[Tensor, "... d_model"]: Batch of embeddings returned by your Embedding layer.
     """
 
-    raise NotImplementedError
+    emb = Embedding(vocab_size, d_model,
+                    device=weights.device, dtype=weights.dtype)
+    emb.load_state_dict({"weight": weights})
+    return emb(token_ids)
 
 
 def run_swiglu(
@@ -83,7 +106,7 @@ def run_swiglu(
     # swiglu.w1.weight.data = w1_weight
     # swiglu.w2.weight.data = w2_weight
     # swiglu.w3.weight.data = w3_weight
-    raise NotImplementedError
+    return swiglu(d_model, d_ff, w1_weight, w2_weight, w3_weight, in_features)
 
 
 def run_scaled_dot_product_attention(
@@ -104,7 +127,7 @@ def run_scaled_dot_product_attention(
     Returns:
         Float[Tensor, " ... queries d_v"]: Output of SDPA
     """
-    raise NotImplementedError
+    return scaled_dot_product_attention(Q, K, V, mask)
 
 
 def run_multihead_self_attention(
@@ -138,7 +161,14 @@ def run_multihead_self_attention(
         Float[Tensor, " ... sequence_length d_model"]: Tensor with the output of running your optimized, batched multi-headed attention
         implementation with the given QKV projection weights and input features.
     """
-    raise NotImplementedError
+    mha = MultiHeadSelfAttention(d_model=d_model, num_heads=num_heads)
+    mha.load_state_dict({
+        "W_Q.weight": q_proj_weight,
+        "W_K.weight": k_proj_weight,
+        "W_V.weight": v_proj_weight,
+        "W_O.weight": o_proj_weight,
+    })
+    return mha(in_features)
 
 
 def run_multihead_self_attention_with_rope(
@@ -178,7 +208,17 @@ def run_multihead_self_attention_with_rope(
         Float[Tensor, " ... sequence_length d_model"]: Tensor with the output of running your optimized, batched multi-headed attention
         implementation with the given QKV projection weights and input features.
     """
-    raise NotImplementedError
+    mha = MultiHeadSelfAttention(
+        d_model=d_model, num_heads=num_heads,
+        max_seq_len=max_seq_len, theta=theta,
+    )
+    mha.load_state_dict({
+        "W_Q.weight": q_proj_weight,
+        "W_K.weight": k_proj_weight,
+        "W_V.weight": v_proj_weight,
+        "W_O.weight": o_proj_weight,
+    })
+    return mha(in_features, token_positions=token_positions)
 
 
 def run_rope(
@@ -189,7 +229,7 @@ def run_rope(
     token_positions: Int[Tensor, " ... sequence_length"],
 ) -> Float[Tensor, " ... sequence_length d_k"]:
     """
-    Run RoPE for a given input tensor.
+    Run RoPE for a givz x zen input tensor.
 
     Args:
         d_k (int): Embedding dimension size for the query or key tensor.
@@ -200,7 +240,8 @@ def run_rope(
     Returns:
         Float[Tensor, " ... sequence_length d_k"]: Tensor with RoPEd input.
     """
-    raise NotImplementedError
+    rope = RoPE(theta, d_k, max_seq_len)
+    return rope(in_query_or_key, token_positions)
 
 
 def run_transformer_block(
@@ -273,7 +314,7 @@ def run_transformer_block(
         Float[Tensor, "batch sequence_length d_model"] Tensor with the output of
         running the Transformer block on the input features while using RoPE.
     """
-    raise NotImplementedError
+    return transformer_block(d_model, num_heads, d_ff, max_seq_len, theta, weights, in_features)
 
 
 def run_transformer_lm(
@@ -355,7 +396,7 @@ def run_transformer_lm(
         Float[Tensor, "batch_size sequence_length vocab_size"]: Tensor with the predicted unnormalized
         next-word distribution for each token.
     """
-    raise NotImplementedError
+    return transformer_lm(vocab_size, context_length, d_model, num_layers, num_heads, d_ff, rope_theta, weights, in_indices,)
 
 
 def run_rmsnorm(
@@ -378,7 +419,10 @@ def run_rmsnorm(
         Float[Tensor,"... d_model"]: Tensor of with the same shape as `in_features` with the output of running
         RMSNorm of the `in_features`.
     """
-    raise NotImplementedError
+    norm = RMSNorm(d_model=d_model, eps=eps)
+    # 加载提供的权重到 weight 参数
+    norm.load_state_dict({"weight": weights})
+    return norm(in_features)
 
 
 def run_silu(in_features: Float[Tensor, " ..."]) -> Float[Tensor, " ..."]:
@@ -415,7 +459,7 @@ def run_get_batch(
         is the sampled input sequences, and the second tuple item is the corresponding
         language modeling labels.
     """
-    raise NotImplementedError
+    return get_batch(dataset, batch_size, context_length, device)
 
 
 def run_softmax(in_features: Float[Tensor, " ..."], dim: int) -> Float[Tensor, " ..."]:
@@ -431,7 +475,7 @@ def run_softmax(in_features: Float[Tensor, " ..."], dim: int) -> Float[Tensor, "
         Float[Tensor, "..."]: Tensor of with the same shape as `in_features` with the output of
         softmax normalizing the specified `dim`.
     """
-    raise NotImplementedError
+    return softmax(in_features, dim)
 
 
 def run_cross_entropy(
@@ -449,7 +493,7 @@ def run_cross_entropy(
     Returns:
         Float[Tensor, ""]: The average cross-entropy loss across examples.
     """
-    raise NotImplementedError
+    return cross_entropy(inputs, targets)
 
 
 def run_gradient_clipping(parameters: Iterable[torch.nn.Parameter], max_l2_norm: float) -> None:
@@ -461,14 +505,14 @@ def run_gradient_clipping(parameters: Iterable[torch.nn.Parameter], max_l2_norm:
 
     The gradients of the parameters (parameter.grad) should be modified in-place.
     """
-    raise NotImplementedError
+    clip_gradients(parameters, max_l2_norm, eps=1e-6)
 
 
 def get_adamw_cls() -> Any:
     """
     Returns a torch.optim.Optimizer that implements AdamW.
     """
-    raise NotImplementedError
+    return AdamW
 
 
 def run_get_lr_cosine_schedule(
@@ -496,7 +540,13 @@ def run_get_lr_cosine_schedule(
     Returns:
         Learning rate at the given iteration under the specified schedule.
     """
-    raise NotImplementedError
+    return get_lr_cosine_schedule(
+        it=it,
+        max_learning_rate=max_learning_rate,
+        min_learning_rate=min_learning_rate,
+        warmup_iters=warmup_iters,
+        cosine_cycle_iters=cosine_cycle_iters
+    )
 
 
 def run_save_checkpoint(
@@ -515,7 +565,7 @@ def run_save_checkpoint(
             we've completed.
         out (str | os.PathLike | BinaryIO | IO[bytes]): Path or file-like object to serialize the model, optimizer, and iteration to.
     """
-    raise NotImplementedError
+    save_checkpoint(model, optimizer, iteration, out)
 
 
 def run_load_checkpoint(
@@ -536,7 +586,7 @@ def run_load_checkpoint(
     Returns:
         int: the previously-serialized number of iterations.
     """
-    raise NotImplementedError
+    return load_checkpoint(src, model, optimizer)
 
 
 def get_tokenizer(
@@ -559,7 +609,11 @@ def get_tokenizer(
     Returns:
         A BPE tokenizer that uses the provided vocab, merges, and special tokens.
     """
-    raise NotImplementedError
+    return Tokenizer(
+        vocab=vocab,
+        merges=merges,
+        special_tokens=special_tokens,
+    )
 
 
 def run_train_bpe(
@@ -589,4 +643,5 @@ def run_train_bpe(
                 representing that <token1> was merged with <token2>.
                 Merges are ordered by order of creation.
     """
-    raise NotImplementedError
+    vocab, merges = train_bpe(input_path, vocab_size, special_tokens)
+    return vocab, merges
