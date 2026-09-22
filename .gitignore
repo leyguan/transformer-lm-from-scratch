@@ -209,3 +209,8 @@ venv/
 .uv/
 
 wrong_version/
+
+doodling.py
+
+make_submission.sh
+
