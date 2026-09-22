@@ -208,3 +208,4 @@ venv/
 # uv
 .uv/
 
+wrong_version/
